@@ -10,6 +10,11 @@ fun main() {
     memberRepository.makeTestMembers()
     articleRepository.makeTestArticle()
 
+    // controller 클래스 생성후 각 객체 만들기
+    val systemController = SystemController()
+    val articleController = ArticleController()
+    val memberController = MemberController()
+
     while (true) {
         val propmpt = if (loginedMember == null){
             "명령어> "
@@ -173,7 +178,7 @@ var loginedMember: Member? = null //로그인 상태 식별
 
 // 컨트롤러 시작
 // 시스템 컨트롤러 시작
-object systemController {
+class SystemController {
     fun exit(rq: Rq) {
         println("시스템 종료")
     }
@@ -181,7 +186,7 @@ object systemController {
 // 시스템 컨트롤러 끝
 
 // 회원 컨트롤러 시작
-object memberController {
+class MemberController {
     fun logout(rq: Rq) {
         loginedMember = null // 이 변수는 세션으로 선언 해야만 에러 없슴
         println("로그아웃.")
@@ -239,7 +244,7 @@ object memberController {
 
 
 // 게시물 컨트롤러 시작
-object articleController { // object는 class 생성없이 객체를 바로 만든다
+class ArticleController { // object는 class 생성없이 객체를 바로 만든다
     fun write(rq: Rq) {
         if (loginedMember == null) {
             println("로그인해주세요.")
