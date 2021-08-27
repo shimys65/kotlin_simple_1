@@ -10,13 +10,11 @@ fun main() {
     memberRepository.makeTestMembers()
     articleRepository.makeTestArticle()
 
-    var loginedMember: Member? = null //로그인 상태 식별
-
     while (true) {
         val propmpt = if (loginedMember == null){
             "명령어> "
         } else {
-            "${loginedMember.nickname}> "
+            "${loginedMember!!.nickname}> "
         }
         print(propmpt)
         val command = readLineTrim()
@@ -25,194 +23,349 @@ fun main() {
 
         when (rq.actionPath) {
             "/system/exit" -> {
-                println("시스템 종료")
+                systemController__exit(rq)
                 break
             }
 
             "/member/logout" -> {
-                loginedMember = null
-                println("로그아웃.")
+                memberControl__logout(rq)
             }
 
             "/member/login" -> {
-                print("로그인아이디 : ")
-                val loginId = readLineTrim()
-
-                val member = memberRepository.getMemberByLoginedId(loginId) // 현재 저장되어있는 아이디인지 확인
-                if (member == null) {
-                    println("'$loginId'(은)는 존재하지 않은 아이디입니다")
-                    continue
-                }
-                print("로그인비밀번호 : ")
-                val loginPw = readLineTrim()
-                if (member.loginPw != loginPw) {
-                    print("비밀번호가 일치하지 않습니다")
-                    continue
-                }
-                loginedMember = member // 로그인 된 멤버의 객체를 넘겨 로그인 상태 유지 체크
-
-                println("'${member.nickname}'님 환영합니다.")
+                memberControl__logoin(rq)
             }
 
             // 새로운 멤버 추가
             "/member/join" -> {
-                print("로그인아이디 : ")
-                val loginId = readLineTrim()
-
-                // 파라메터로 loginId를 넘겨 멤버가 이미 존재하는지 확인
-                val isJoinableLoginId = memberRepository.isJoinableLoginId(loginId)
-                if (isJoinableLoginId == false) {
-                    println("'$loginId'(은)는 이미 사용중인 아이디입니다")
-                    continue
-                }
-
-                print("로그인비밀번호 : ")
-                val loginPw = readLineTrim()
-                print("이름 : ")
-                val name = readLineTrim()
-                print("별명 : ")
-                val nickname = readLineTrim()
-                print("휴대전화번호 : ")
-                val cellphoneNo = readLineTrim()
-                print("이메일 : ")
-                val email = readLineTrim()
-
-                val id = memberRepository.join(loginId, loginPw, name, nickname, cellphoneNo, email)
-
-                // 이전에 id가 9이면 새로운 가입자의 id는 '10'이 됨.
-                println("${id}번 회원으로 가입되었습니다.")
+                memberController__join(rq)
             }
 
             "/article/write" -> {
-                if (loginedMember == null) {
-                    println("로그인해주세요.")
-                    continue
-                }
+                articleController__write(rq)
+            }
 
-                print("제목 : ")
-                val title = readLineTrim()
-                print("내용 : ")
-                val body = readLineTrim()
-
-                val id = articleRepository.addArticle(loginedMember.id, title, body)
-
-                println("${id}번 게시물이 추가되었습니다.")
+            "/article/list" -> {
+                articleController__list(rq)
             }
 
             "/article/detail" -> {
-                if (loginedMember == null) {
-                    println("로그인해주세요.")
-                    continue
-                }
-
-                val id = rq.getIntParam("id", 0)
-
-                if (id == 0){
-                    println("id를 입력해 주세요.") // 삭제할 id 입력
-                    continue
-                }
-                val article = articleRepository.getArticleByID(id)
-
-                if (article == null) {
-                    println("${id}번 게시물은 존재하지 않습니다.")
-                    continue
-                }
-
-                println("번호 : ${article.id}")
-                println("작성날짜 : ${article.regDate}")
-                println("갱신날짜 : ${article.updateDate}")
-                println("제목 : ${article.title}")
-                println("내용 : ${article.body}")
-            } // end of "/article/detail"
+                articleController__detail(rq)
+            }
 
             "/article/modify" -> {
-                if (loginedMember == null) {
-                    println("로그인해주세요.")
-                    continue
-                }
-
-                val id = rq.getIntParam("id", 0)
-
-                if (id == 0){
-                    println("id를 입력해 주세요.")
-                    continue
-                }
-                val article = articleRepository.getArticleByID(id)
-
-                if (article == null) {
-                    println("${id}번 게시물은 존재하지 않습니다.")
-                    continue
-                }
-
-                // 현재 게시물의 사용자와 로그인 사용자가 일치하는지 확인
-                if (article.id != loginedMember.id) {
-                    println("권한이 없습니다")
-                    continue
-                }
-
-                print("${id}번 게시물 새 제목 : ")
-                val title = readLineTrim()
-                print("${id}번 게시물 새 제목 : ")
-                val body = readLineTrim()
-
-                articleRepository.articleModify(id, title, body)
-                println("${id}번 게시물이 수정되었음")
-            } // end of "/article/modify"
-
-            "/article/list" -> {
-                val page = rq.getIntParam("page", 1) //입력 명령어가 page
-                val searchKeyword = rq.getStringParam("searchKeyword", "") //입력 명령어가 searchKeyword
-
-                val filteredArticles = articleRepository.getFilteredArticles(searchKeyword, page,10)
-
-                println("번호 /      작성날짜      / 작성자 / 제목 / 내용")
-                for (article in filteredArticles) {
-                    val writer = memberRepository.getMemberById(article.memberId)!!
-                    val writerName = writer.nickname
-
-                    println(" ${article.id} / ${article.regDate} / $writerName / ${article.title} / ${article.body}")
-                }
-            } // end of "/article/list"
+                articleController__modify(rq)
+            }
 
             "/article/delete" -> {
-                if (loginedMember == null) {
-                    println("로그인해주세요.")
-                    continue
-                }
-
-                val id = rq.getIntParam("id", 0)
-
-                if (id == 0) {
-                    println("id를 입력해 주세요.")
-                    continue
-                }
-                val article = articleRepository.getArticleByID(id)
-
-                if (article == null) {
-                    println("${id}번 게시물은 존재하지 않습니다.")
-                    continue
-                }
-
-                // 현재 게시물의 사용자와 로그인 사용자가 일치하는지 확인
-                if (article.id != loginedMember.id) {
-                    println("권한이 없습니다")
-                    continue
-                }
-
-                articleRepository.deleteArticle(article)
-
-                println("${id}번 게시물을 삭제하였습니다.")
-            } // end of "/article/delete"
+                articleController__delete(rq)
+            }
         } // end fo when
     } // end of while
 
     println("== SIMPLE SSG 끝 ==")
 } //end of Main
 
+
+
+class Rq(command: String) {
+    // 전체 URL : /artile/detail?id=1
+    // actionPath : /artile/detail
+    val actionPath: String
+
+    // 전체 URL : /artile/detail?id=1&title=안녕
+    // paramMap : {id:"1", title:"안녕"}
+    val paramMap: Map<String, String>
+
+    // actionPath와 paramMap의 초기화
+    init {
+        val commandBits = command.split("?", limit = 2)
+
+        // url path 부분을 저장
+        actionPath = commandBits[0].trim() // '?'의 왼쪽이 저장
+
+        // /article/detail?id=2&title=we&body=us
+        // *** 파라메터 부분('?'의 오른쪽)을 저장하기위해 입력한 내용이 있는지 검증 ***
+        // lastIndex는 get() = this.size - 1이므로 ?가 있으면 두개로 나누어지므로 1을 반환, '?'가 없으면
+        // 나누어지는 것이 없으므로 size가 1이됨 그래서 1-1='0'을 반환
+        // commandBits[1].isNotEmpty()는 '?' 뒤에 아무것도 없으면 fales, 있으면 true 반환
+        val queryStr = if (commandBits.lastIndex == 1 && commandBits[1].isNotEmpty()) {
+            commandBits[1].trim() // '?' 오른쪽을 quertStr에 저장
+        } else {
+            ""
+        } // queryStr 출력은 id=2&title=제목1
+
+        // queryStr에 저장된 파라메터를 split으로 &로 나누고 다시 = 로 나누는 작업, 그리고 paramMap에 저장
+        paramMap = if (queryStr.isEmpty()) {
+            mapOf()  // 비어있으면 고정된 map에 저장
+        } else {
+            // 그렇지 않으면 가변 맵, paramMapTemp을 만들어서 paramName에는 키를 paramValue에는 밸류를 저장
+            val paramMapTemp = mutableMapOf<String, String>()
+
+            // queryStrBits 출력은 [id=2, title=제목1]
+            val queryStrBits = queryStr.split("&")
+
+            for (queryStrBit in queryStrBits) {
+                // queryStrBitBits의 출력은 [id, 2] [title, 제목1]
+                val queryStrBitBits = queryStrBit.split("=", limit = 2)
+                val paramName = queryStrBitBits[0]
+
+                // queryStrBitBits.lastIndex는 '='가 있어야하고 [1]이 비어있지 않으면 true
+                val paramValue = if (queryStrBitBits.lastIndex == 1 && queryStrBitBits[1].isNotEmpty()) {
+                    queryStrBitBits[1].trim()
+                } else {
+                    ""
+                }
+                if (paramValue.isNotEmpty()) {
+                    paramMapTemp[paramName] = paramValue
+                }
+            } // end of for(), 저장된 최종값을 불변 맵에 저장
+            paramMapTemp.toMap()
+        }// end of paramMap
+        //println(paramMap)
+    }//end of init
+
+
+    // 입력 : /article/detail?id=2&title=제목1
+    // 입력을 잘못해서 /article/detail 뒤가 없는 경우 예외처리
+    fun getStringParam(name: String, default: String): String {
+        // 3번
+        return paramMap[name] ?: default
+        //return paramMap[name]!!
+
+        /* 2번
+        return if (paramMap[name] == null) {
+            default
+        } else {
+            paramMap[name]!!
+        }*/
+
+        /* 1번
+        return try {
+            paramMap[name]!!
+        }
+        catch ( e: NullPointerException ) {
+            default
+        }*/
+    }
+
+
+    fun getIntParam(name: String, default: Int): Int {
+        //        return paramMap[name]!!.toInt()
+
+        return if (paramMap[name] != null) {
+            try {
+                paramMap[name]!!.toInt()
+                // 만약 'id=2번'으로 입력 시 '번'은 toInt()가 안됨.
+            } catch (e: NumberFormatException) {
+                default
+            }
+        } else {
+            default
+        }
+    }
+
+}// end of Rq()
+
+// 세션 시작
+var loginedMember: Member? = null //로그인 상태 식별
+// 세션 끝
+
+
+// 컨트롤러 시작
+// 시스템 컨트롤러 시작
+fun systemController__exit(rq: Rq) {
+    println("시스템 종료")
+}
+// 시스템 컨트롤러 끝
+
+// 회원 컨트롤러 시작
+fun memberControl__logout(rq: Rq) {
+    loginedMember = null // 이 변수는 세션으로 선언 해야만 에러 없슴
+    println("로그아웃.")
+}
+
+fun memberControl__logoin(rq: Rq) {
+    print("로그인아이디 : ")
+    val loginId = readLineTrim()
+
+    val member = memberRepository.getMemberByLoginedId(loginId) // 현재 저장되어있는 아이디인지 확인
+    if (member == null) {
+        println("'$loginId'(은)는 존재하지 않은 아이디입니다")
+        return // 함수이기때문에 이전의 continue를 return으로...
+    }
+    print("로그인비밀번호 : ")
+    val loginPw = readLineTrim()
+    if (member.loginPw != loginPw) {
+        print("비밀번호가 일치하지 않습니다")
+        return
+    }
+    loginedMember = member // 로그인 된 멤버의 객체를 넘겨 로그인 상태 유지 체크
+
+    println("'${member.nickname}'님 환영합니다.")
+}
+
+fun memberController__join(rq: Rq) {
+    print("로그인아이디 : ")
+    val loginId = readLineTrim()
+
+    // 파라메터로 loginId를 넘겨 멤버가 이미 존재하는지 확인
+    val isJoinableLoginId = memberRepository.isJoinableLoginId(loginId)
+    if (isJoinableLoginId == false) {
+        println("'$loginId'(은)는 이미 사용중인 아이디입니다")
+        return
+    }
+
+    print("로그인비밀번호 : ")
+    val loginPw = readLineTrim()
+    print("이름 : ")
+    val name = readLineTrim()
+    print("별명 : ")
+    val nickname = readLineTrim()
+    print("휴대전화번호 : ")
+    val cellphoneNo = readLineTrim()
+    print("이메일 : ")
+    val email = readLineTrim()
+
+    val id = memberRepository.join(loginId, loginPw, name, nickname, cellphoneNo, email)
+
+    // 이전에 id가 9이면 새로운 가입자의 id는 '10'이 됨.
+    println("${id}번 회원으로 가입되었습니다.")
+}
+// 회원 컨트롤러 끝
+
+
+// 게시물 컨트롤러 시작
+fun articleController__write(rq: Rq) {
+    if (loginedMember == null) {
+        println("로그인해주세요.")
+        return
+    }
+
+    print("제목 : ")
+    val title = readLineTrim()
+    print("내용 : ")
+    val body = readLineTrim()
+
+    val id = articleRepository.addArticle(loginedMember!!.id, title, body)
+
+    println("${id}번 게시물이 추가되었습니다.")
+}
+
+fun articleController__list(rq: Rq) {
+    val page = rq.getIntParam("page", 1) //입력 명령어가 page
+    val searchKeyword = rq.getStringParam("searchKeyword", "") //입력 명령어가 searchKeyword
+
+    val filteredArticles = articleRepository.getFilteredArticles(searchKeyword, page,10)
+
+    println("번호 /      작성날짜      / 작성자 / 제목 / 내용")
+    for (article in filteredArticles) {
+        val writer = memberRepository.getMemberById(article.memberId)!!
+        val writerName = writer.nickname
+
+        println(" ${article.id} / ${article.regDate} / $writerName / ${article.title} / ${article.body}")
+    }
+}
+
+fun articleController__detail(rq: Rq) {
+    if (loginedMember == null) {
+        println("로그인해주세요.")
+        return
+    }
+
+    val id = rq.getIntParam("id", 0)
+
+    if (id == 0){
+        println("id를 입력해 주세요.") // 삭제할 id 입력
+        return
+    }
+    val article = articleRepository.getArticleByID(id)
+
+    if (article == null) {
+        println("${id}번 게시물은 존재하지 않습니다.")
+        return
+    }
+
+    println("번호 : ${article.id}")
+    println("작성날짜 : ${article.regDate}")
+    println("갱신날짜 : ${article.updateDate}")
+    println("제목 : ${article.title}")
+    println("내용 : ${article.body}")
+}
+
+fun articleController__modify(rq: Rq) {
+    if (loginedMember == null) {
+        println("로그인해주세요.")
+        return
+    }
+
+    val id = rq.getIntParam("id", 0)
+
+    if (id == 0){
+        println("id를 입력해 주세요.")
+        return
+    }
+    val article = articleRepository.getArticleByID(id)
+
+    if (article == null) {
+        println("${id}번 게시물은 존재하지 않습니다.")
+        return
+    }
+
+    // 현재 게시물의 사용자와 로그인 사용자가 일치하는지 확인
+    if (article.id != loginedMember!!.id) {
+        println("권한이 없습니다")
+        return
+    }
+
+    print("${id}번 게시물 새 제목 : ")
+    val title = readLineTrim()
+    print("${id}번 게시물 새 제목 : ")
+    val body = readLineTrim()
+
+    articleRepository.articleModify(id, title, body)
+    println("${id}번 게시물이 수정되었음")
+}
+
+fun articleController__delete(rq: Rq) {
+    if (loginedMember == null) {
+        println("로그인해주세요.")
+        return
+    }
+
+    val id = rq.getIntParam("id", 0)
+
+    if (id == 0) {
+        println("id를 입력해 주세요.")
+        return
+    }
+    val article = articleRepository.getArticleByID(id)
+
+    if (article == null) {
+        println("${id}번 게시물은 존재하지 않습니다.")
+        return
+    }
+
+    // 현재 게시물의 사용자와 로그인 사용자가 일치하는지 확인
+    if (article.id != loginedMember!!.id) {
+        println("권한이 없습니다")
+        return
+    }
+
+    articleRepository.deleteArticle(article)
+
+    println("${id}번 게시물을 삭제하였습니다.")
+}
+// 게시물 컨트롤러 끝
+
+// 컨트롤러 끝
+
+
+// 회원 DTO(Data Transfer Object)
 data class Member(
     val id: Int, val regDate: String, var updateDate: String, val loginId: String,
     val loginPw: String, val name: String, val nickname: String, val cellphoneNo: String, val email: String)
 
+// 회원 리포지터리
 object memberRepository {
     private val members = mutableListOf<Member>()
     private var lastId = 0
@@ -260,11 +413,16 @@ object memberRepository {
         return null
     }
 }
+// 회원 관련 끝
 
+
+// 게시물 관련 시작
+// 게시물 DTO
 data class Article(
     val id: Int, val regDate: String, var updateDate: String,  val memberId: Int, var title: String, var body: String,
 )
 
+// 게시물 리포지터리
 object articleRepository {
     val articles = mutableListOf<Article>()
     var lastId = 0
@@ -353,106 +511,11 @@ object articleRepository {
     }
 
 }// end of articleRepository
-
-class Rq(command: String) {
-    // 전체 URL : /artile/detail?id=1
-    // actionPath : /artile/detail
-    val actionPath: String
-
-    // 전체 URL : /artile/detail?id=1&title=안녕
-    // paramMap : {id:"1", title:"안녕"}
-    val paramMap: Map<String, String>
-
-    // actionPath와 paramMap의 초기화
-    init {
-        val commandBits = command.split("?", limit = 2)
-
-        // url path 부분을 저장
-        actionPath = commandBits[0].trim() // '?'의 왼쪽이 저장
-
-        // /article/detail?id=2&title=we&body=us
-        // *** 파라메터 부분('?'의 오른쪽)을 저장하기위해 입력한 내용이 있는지 검증 ***
-        // lastIndex는 get() = this.size - 1이므로 ?가 있으면 두개로 나누어지므로 1을 반환, '?'가 없으면
-        // 나누어지는 것이 없으므로 size가 1이됨 그래서 1-1='0'을 반환
-        // commandBits[1].isNotEmpty()는 '?' 뒤에 아무것도 없으면 fales, 있으면 true 반환
-        val queryStr = if (commandBits.lastIndex == 1 && commandBits[1].isNotEmpty()) {
-            commandBits[1].trim() // '?' 오른쪽을 quertStr에 저장
-        } else {
-            ""
-        } // queryStr 출력은 id=2&title=제목1
-
-        // queryStr에 저장된 파라메터를 split으로 &로 나누고 다시 = 로 나누는 작업, 그리고 paramMap에 저장
-        paramMap = if (queryStr.isEmpty()) {
-            mapOf()  // 비어있으면 고정된 map에 저장
-        } else {
-        // 그렇지 않으면 가변 맵, paramMapTemp을 만들어서 paramName에는 키를 paramValue에는 밸류를 저장
-            val paramMapTemp = mutableMapOf<String, String>()
-
-            // queryStrBits 출력은 [id=2, title=제목1]
-            val queryStrBits = queryStr.split("&")
-
-            for (queryStrBit in queryStrBits) {
-                // queryStrBitBits의 출력은 [id, 2] [title, 제목1]
-                val queryStrBitBits = queryStrBit.split("=", limit = 2)
-                val paramName = queryStrBitBits[0]
-
-                // queryStrBitBits.lastIndex는 '='가 있어야하고 [1]이 비어있지 않으면 true
-                val paramValue = if (queryStrBitBits.lastIndex == 1 && queryStrBitBits[1].isNotEmpty()) {
-                    queryStrBitBits[1].trim()
-                } else {
-                    ""
-                }
-                if (paramValue.isNotEmpty()) {
-                    paramMapTemp[paramName] = paramValue
-                }
-            } // end of for(), 저장된 최종값을 불변 맵에 저장
-            paramMapTemp.toMap()
-        }// end of paramMap
-        //println(paramMap)
-    }//end of init
+// 게시물 관련 끝
 
 
-    // 입력 : /article/detail?id=2&title=제목1
-    // 입력을 잘못해서 /article/detail 뒤가 없는 경우 예외처리
-    fun getStringParam(name: String, default: String): String {
-        // 3번
-        return paramMap[name] ?: default
-        //return paramMap[name]!!
 
-        /* 2번
-        return if (paramMap[name] == null) {
-            default
-        } else {
-            paramMap[name]!!
-        }*/
-
-        /* 1번
-        return try {
-            paramMap[name]!!
-        }
-        catch ( e: NullPointerException ) {
-            default
-        }*/
-    }
-
-
-    fun getIntParam(name: String, default: Int): Int {
-        //        return paramMap[name]!!.toInt()
-
-        return if (paramMap[name] != null) {
-            try {
-                paramMap[name]!!.toInt()
-    // 만약 'id=2번'으로 입력 시 '번'은 toInt()가 안됨.
-            } catch (e: NumberFormatException) {
-                default
-            }
-        } else {
-            default
-        }
-    }
-
-}// end of Rq()
-
+// 유틸관련
 object Util {
     fun getNowDateStr(): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -460,7 +523,7 @@ object Util {
         return dateFormat.format(System.currentTimeMillis())
     }
 }
-
+// 유틸관련 끝
 
 
 
