@@ -37,6 +37,10 @@ fun main() {
                 boardController.list(rq)
             }
 
+            "/board/add" -> {
+                boardController.add(rq)
+            }
+
             "/member/logout" -> {
                 memberController.logout(rq)
             }
