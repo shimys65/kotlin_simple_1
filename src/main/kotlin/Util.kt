@@ -11,6 +11,7 @@ object Util {
     }
 }
 
+// json 파일을 Map에 저장
 fun mapFromJson(jsonStr: String): Map<String, Any> {
     val map = mutableMapOf<String, Any>()
     var jsonStr = jsonStr.drop(1)

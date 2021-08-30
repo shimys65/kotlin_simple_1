@@ -12,7 +12,7 @@ fun main() {
 
     memberRepository.makeTestMembers()
     boardRepository.makeTestBoards()
-    articleRepository.makeTestArticle()
+    //articleRepository.makeTestArticle()
 
     // controller 클래스 생성후 각 객체 만들기
     val systemController = SystemController()

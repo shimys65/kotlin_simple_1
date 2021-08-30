@@ -2,17 +2,37 @@
 class ArticleRepository {
 
     fun getArticles(): List<Article> {
+        val articles = mutableListOf<Article>()
         val lastId = getLastId()
         for (id in 1..lastId) {
-            val jsonStr = readStrFromFile("data/article/$id.json")
-            println(jsonStr)
+            val article = articleFromFile("data/article/$id.json")
+            articles.add(article)
         }
-        return mutableListOf<Article>()
+        return articles
+    }
+
+    private fun articleFromFile(jsonFilePath: String): Article {
+        val jsonStr = readStrFromFile(jsonFilePath)
+        val map = mapFromJson(jsonStr)
+
+        val id = map["id"].toString().toInt()
+        val regDate = map["regDate"].toString()
+        var updateDate = map["updateDate"].toString()
+        val boardId = map["boardId"].toString().toInt()
+        val memberId = map["memberId"].toString().toInt()
+        var title = map["title"].toString()
+        var body = map["body"].toString()
+
+        return Article(id, regDate, updateDate, boardId, memberId, title, body)
     }
 
     fun getLastId(): Int {
         val lastId = readIntFromFile("data/article/lastId.txt")
         return lastId
+    }
+
+    private fun setLastId(newLastId: Int) {
+        writeIntFile("data/article/lastId.txt", newLastId)
     }
 
     fun deleteArticle(article: Article) {
@@ -21,18 +41,27 @@ class ArticleRepository {
 
     fun getArticleByID(id: Int) : Article? {
         // 파일에서 객체 얻기
-        return Article(1, "", "", 1, 1, "", "")
+        return null
     }
 
     fun addArticle(boardId: Int, memberId: Int, title: String, body: String): Int {
         // 파일 생성
+        val id = getLastId() + 1
+        val regDate = Util.getNowDateStr()
+        val updateDate = Util.getNowDateStr()
+
+        val article = Article(id, regDate, updateDate, boardId, memberId, title, body)
+        val jsonStr = article.toJson()
+        writeStrFile("data/article/${article.id}.json", jsonStr)
+
+        setLastId(id)
         return 0
     }
 
     fun makeTestArticle() {
-    /*    for (id in 1..20) {
+        for (id in 1..20) {
             addArticle(id % 2 + 1,id % 9 +1, "제목_$id", "내용_$id") //1 ~ 10(멤버 수)
-        } */
+        }
     }
 
 
@@ -86,23 +115,17 @@ class ArticleRepository {
         return filteredArticles
     }
 
-    private fun getPageFilteredArticles(filtered1Articles: List<Article>, page: Int, itemsCountInAPage: Int): List<Article> {
+    private fun getPageFilteredArticles(articles: List<Article>, page: Int, itemsCountInAPage: Int): List<Article> {
         val filteredArticles = mutableListOf<Article>()
-
         val offsetCount = (page - 1) * itemsCountInAPage
-
-        val startIndex = getArticles().lastIndex - offsetCount
+        val startIndex = articles.lastIndex - offsetCount
         var endIndex = startIndex - (itemsCountInAPage - 1)
-
         if (endIndex < 0) {
             endIndex = 0
         }
-
         for (i in startIndex downTo endIndex) {
-            filteredArticles.add(getArticles()[i])
+            filteredArticles.add(articles[i])
         }
-
         return filteredArticles
     }
-
 }
