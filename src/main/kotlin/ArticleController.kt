@@ -96,7 +96,7 @@ class ArticleController { // object는 class 생성없이 객체를 바로 만�
         }
 
         // 현재 게시물의 사용자와 로그인 사용자가 일치하는지 확인
-        if (article.id != loginedMember!!.id) {
+        if (article.memberId != loginedMember!!.id) {
             println("권한이 없습니다")
             return
         }
@@ -130,7 +130,7 @@ class ArticleController { // object는 class 생성없이 객체를 바로 만�
         }
 
         // 현재 게시물의 사용자와 로그인 사용자가 일치하는지 확인
-        if (article.id != loginedMember!!.id) {
+        if (article.memberId != loginedMember!!.id) {
             println("권한이 없습니다")
             return
         }

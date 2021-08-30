@@ -3,14 +3,6 @@ import java.text.SimpleDateFormat
 
 fun readLineTrim() = readLine()!!.trim()
 
-object Util {
-    fun getNowDateStr(): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-
-        return dateFormat.format(System.currentTimeMillis())
-    }
-}
-
 // json 파일을 Map에 저장
 fun mapFromJson(jsonStr: String): Map<String, Any> {
     val map = mutableMapOf<String, Any>()
@@ -44,6 +36,9 @@ fun mapFromJson(jsonStr: String): Map<String, Any> {
 }
 
 fun readStrFromFile(filePath: String): String {
+    if (!File(filePath).isFile) {
+        return ""
+    }
     return File(filePath).readText(Charsets.UTF_8) // read text 원형
 }
 
@@ -58,4 +53,16 @@ fun readIntFromFile(filePath: String): Int {
 
 fun writeIntFile(filePath: String, fileContent: Int) {
     writeStrFile(filePath, fileContent.toString())
+}
+
+fun deleteFile(filePath: String) {
+    File(filePath).delete()
+}
+
+object Util {
+    fun getNowDateStr(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+
+        return dateFormat.format(System.currentTimeMillis())
+    }
 }
