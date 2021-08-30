@@ -2,6 +2,17 @@ class BoardRepository {
     val boards = mutableListOf<Board>()
     var lastId = 0
 
+    @JvmName("getBoards1")
+    fun getBoards(): List<Board> {
+        return boards
+    }
+
+
+    fun makeTestBoards() {
+        makeBoard("공지", "notice")
+        makeBoard("자유", "free")
+    }
+
     fun getFilteredBoards(): List<Board> {
         return boards
     }
@@ -22,7 +33,6 @@ class BoardRepository {
             }
         }
         return  null
-
     }
 
     fun makeBoard(name: String, code: String): Int {
@@ -33,6 +43,15 @@ class BoardRepository {
         boards.add(Board(id, regDate, updateDate, name, code))
 
         return id
+    }
+
+    fun getBoardById(id: Int): Board? {
+        for (board in boards) {
+            if (board.id == id) {
+                return board
+            }
+        }
+        return  null
 
     }
 

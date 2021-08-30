@@ -1,13 +1,17 @@
 
 import java.text.SimpleDateFormat
 
+var loginedMember: Member? = null //로그인 상태 식별
 
-fun readLineTrim() = readLine()!!.trim()
+val memberRepository = MemberRepository()
+val articleRepository = ArticleRepository()
+val boardRepository = BoardRepository()
 
 fun main() {
     println("== SIMPLE SSG 시작 ==")
 
     memberRepository.makeTestMembers()
+    boardRepository.makeTestBoards()
     articleRepository.makeTestArticle()
 
     // controller 클래스 생성후 각 객체 만들기
@@ -15,6 +19,9 @@ fun main() {
     val boardController = BoardController()
     val articleController = ArticleController()
     val memberController = MemberController()
+
+    // 1번 회원으로 로그인 된 상태로 시작한다.
+    loginedMember = memberRepository.getMemberById(1)
 
     while (true) {
         val propmpt = if (loginedMember == null){
@@ -37,8 +44,8 @@ fun main() {
                 boardController.list(rq)
             }
 
-            "/board/add" -> {
-                boardController.add(rq)
+            "/board/make" -> {
+                boardController.make(rq)
             }
 
             "/member/logout" -> {
@@ -81,9 +88,3 @@ fun main() {
 
 
 
-// 세션 시작
-var loginedMember: Member? = null //로그인 상태 식별
-// 세션 끝
-val memberRepository = MemberRepository()
-val articleRepository = ArticleRepository()
-val boardRepository = BoardRepository()

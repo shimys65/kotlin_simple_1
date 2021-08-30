@@ -5,12 +5,28 @@ class ArticleController { // object는 class 생성없이 객체를 바로 만�
             return
         }
 
+        print("게시판 리스트 : ")
+
+        val boards: List<Board> = boardRepository.getBoards()
+        var boardSelectStr = ""
+
+        for (board in boards) {
+            if (boardSelectStr.isNotEmpty()) {
+                boardSelectStr += ", "
+            }
+            boardSelectStr += "${board.name}=${board.id}"
+        }
+
+        println("$boardSelectStr")
+
+        print("게시판 선택(번호) : ")
+        val boardId = readLineTrim().toInt()
         print("제목 : ")
         val title = readLineTrim()
         print("내용 : ")
         val body = readLineTrim()
 
-        val id = articleRepository.addArticle(loginedMember!!.id, title, body)
+        val id = articleRepository.addArticle(boardId, loginedMember!!.id, title, body)
 
         println("${id}번 게시물이 추가되었습니다.")
     }
@@ -18,15 +34,19 @@ class ArticleController { // object는 class 생성없이 객체를 바로 만�
     fun list(rq: Rq) {
         val page = rq.getIntParam("page", 1) //입력 명령어가 page
         val searchKeyword = rq.getStringParam("searchKeyword", "") //입력 명령어가 searchKeyword
+        val boardCode = rq.getStringParam("boardCode", "")
 
-        val filteredArticles = articleRepository.getFilteredArticles(searchKeyword, page,10)
+        val filteredArticles = articleRepository.getFilteredArticles(boardCode, searchKeyword, page, 10)
 
-        println("번호 /      작성날짜      / 작성자 / 제목 / 내용")
+        println("번호 /      작성날짜      / 게시물 종류 / 작성자 / 제목 / 내용")
         for (article in filteredArticles) {
+            val board = boardRepository.getBoardById(article.boardId)!!
+            val boardName = board.name
+
             val writer = memberRepository.getMemberById(article.memberId)!!
             val writerName = writer.nickname
 
-            println(" ${article.id} / ${article.regDate} / $writerName / ${article.title} / ${article.body}")
+            println(" ${article.id} / ${article.regDate} / $boardName / $writerName / ${article.title} / ${article.body}")
         }
     }
 
@@ -58,7 +78,7 @@ class ArticleController { // object는 class 생성없이 객체를 바로 만�
 
     fun modify(rq: Rq) {
         if (loginedMember == null) {
-            println("로그인해주세요.")
+            println("로그인 해주세요.")
             return
         }
 
