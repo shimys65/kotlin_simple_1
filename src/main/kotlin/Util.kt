@@ -47,9 +47,19 @@ fun writeStrFile(filePath: String, fileContent: String) {
     File(filePath).writeText(fileContent) // write text 원형
 }
 
-fun readIntFromFile(filePath: String): Int {
-    return readStrFromFile(filePath).toInt()
+fun readIntFromFile(filePath: String, default:Int): Int {
+    val fileContent = readStrFromFile(filePath)
+
+    if ( fileContent == "" ) {
+        return default
+    }
+
+    return fileContent.toInt()
 }
+// 윗 코드로 변환, txt에서 가져 올거 없을때 프로그램 정지 예방
+/*fun readIntFromFile(filePath: String): Int {
+    return readStrFromFile(filePath).toInt()
+} */
 
 fun writeIntFile(filePath: String, fileContent: Int) {
     writeStrFile(filePath, fileContent.toString())

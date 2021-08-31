@@ -33,8 +33,8 @@ class ArticleRepository {
     }
 
     fun getLastId(): Int {
-        val lastId = readIntFromFile("data/article/lastId.txt")
-        return lastId
+        val lastId = readIntFromFile("data/article/lastId.txt", 0)
+        return lastId                        //txt에서 가져 올거 없으면 0, default 선언
     }
 
     private fun setLastId(newLastId: Int) {
@@ -51,7 +51,7 @@ class ArticleRepository {
         return article
     }
 
-    fun addArticle(boardId: Int, memberId: Int, title: String, body: String): Int {
+    fun writeArticle(boardId: Int, memberId: Int, title: String, body: String): Int {
         // 파일 생성
         val id = getLastId() + 1
         val regDate = Util.getNowDateStr()
@@ -67,7 +67,7 @@ class ArticleRepository {
 
     fun makeTestArticle() {
         for (id in 1..20) {
-            addArticle(id % 2 + 1,id % 9 +1, "제목_$id", "내용_$id") //1 ~ 10(멤버 수)
+            writeArticle(id % 2 + 1,id % 9 +1, "제목_$id", "내용_$id") //1 ~ 10(멤버 수)
         }
     }
 

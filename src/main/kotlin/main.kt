@@ -10,7 +10,7 @@ val boardRepository = BoardRepository()
 fun main() {
     println("== SIMPLE SSG 시작 ==")
 
-    memberRepository.makeTestMembers()
+    //memberRepository.makeTestMembers()
     boardRepository.makeTestBoards()
     //articleRepository.makeTestArticle()
 
